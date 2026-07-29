@@ -4,77 +4,86 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RabahDj</title>
-    <!-- استدعاء أيقونات احترافية -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         :root { --bg: #0b1220; --glass: rgba(255, 255, 255, 0.08); }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding-bottom: 90px; }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; }
         
-        header { text-align: center; padding: 40px 20px; }
-        header h1 { font-size: 2.5rem; color: #3b82f6; margin: 0; }
+        .screen { display: none; }
+        .active { display: block; }
         
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
-        .card { 
-            background: var(--glass); backdrop-filter: blur(15px);
-            padding: 25px; border-radius: 25px; text-align: center; 
-            border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s;
-        }
-        .card:active { transform: scale(0.95); background: rgba(255,255,255,0.15); }
-        .card i { font-size: 35px; margin-bottom: 15px; display: block; color: #fff; }
+        .card { background: var(--glass); backdrop-filter: blur(15px); padding: 25px; border-radius: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
         
-        .nav-bar { 
-            position: fixed; bottom: 0; width: 100%; display: flex; 
-            justify-content: space-around; padding: 15px 0; 
-            background: rgba(11, 18, 32, 0.95); backdrop-filter: blur(10px);
-            border-top: 1px solid #1e293b;
-        }
+        /* تصميم شاشة الشات */
+        .chat-container { padding: 20px; }
+        #messages { height: 300px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 15px; padding: 10px; margin-bottom: 10px; }
+        input#msgInput { width: 70%; padding: 10px; border-radius: 10px; border: none; }
+        
+        .nav-bar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 15px 0; background: rgba(11, 18, 32, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #1e293b; }
         .nav-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>RabahDj</h1>
-        <p style="color: #94a3b8;">شبكتك الاجتماعية المحلية</p>
-    </header>
+    <!-- الشاشة الرئيسية -->
+    <div id="home" class="screen active">
+        <header style="text-align: center; padding: 40px 20px;"><h1>RabahDj</h1></header>
+        <div class="grid">
+            <div class="card"><i class="fa-solid fa-film" style="color: #ef4444;"></i><br>سينما</div>
+            <div class="card"><i class="fa-solid fa-tower-broadcast" style="color: #8b5cf6;"></i><br>بث</div>
+            <div class="card"><i class="fa-solid fa-microphone-lines" style="color: #22c55e;"></i><br>تخاطب</div>
+            <div class="card" onclick="go('chat-screen')"><i class="fa-solid fa-comments" style="color: #3b82f6;"></i><br>محادثات</div>
+        </div>
+    </div>
 
-    <div class="grid">
-        <div class="card" onclick="alert('جارٍ فتح السينما...')"><i class="fa-solid fa-film" style="color: #ef4444;"></i>سينما</div>
-        <div class="card" onclick="alert('جارٍ فتح البث...')"><i class="fa-solid fa-tower-broadcast" style="color: #8b5cf6;"></i>بث مباشر</div>
-        <div class="card" onclick="alert('جارٍ فتح التخاطب...')"><i class="fa-solid fa-microphone-lines" style="color: #22c55e;"></i>تخاطب</div>
-        <div class="card" onclick="alert('جارٍ فتح الشات...')"><i class="fa-solid fa-comments" style="color: #3b82f6;"></i>محادثات</div>
-        <div class="card" style="grid-column: span 2;" onclick="alert('جارٍ فتح الألعاب...')"><i class="fa-solid fa-gamepad" style="color: #f59e0b;"></i>ألعاب</div>
+    <!-- شاشة المحادثة -->
+    <div id="chat-screen" class="screen">
+        <div class="chat-container">
+            <h3>المحادثة المحلية</h3>
+            <div id="messages"></div>
+            <input type="text" id="msgInput" placeholder="اكتب رسالة...">
+            <button onclick="sendMessage()">إرسال</button>
+            <button onclick="go('home')">خروج</button>
+        </div>
     </div>
 
     <div class="nav-bar">
-        <button class="nav-btn" onclick="adminLogin()"><i class="fa-solid fa-gear"></i></button>
-        <button class="nav-btn" onclick="alert('البحث')"><i class="fa-solid fa-magnifying-glass"></i></button>
-        <button class="nav-btn" onclick="alert('المستخدمون')"><i class="fa-solid fa-users"></i></button>
-        <button class="nav-btn" onclick="window.location.reload()"><i class="fa-solid fa-house"></i></button>
+        <button class="nav-btn" onclick="go('home')"><i class="fa-solid fa-house"></i></button>
     </div>
 
     <script>
-        // --- حماية الأدمن ---
-        if (!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '1234');
-        function adminLogin() {
-            const input = prompt("أدخل كلمة مرور الأدمن:");
-            if (input === localStorage.getItem('adminPass')) {
-                const newPass = prompt("كلمة سر جديدة (أو إلغاء):");
-                if (newPass) localStorage.setItem('adminPass', newPass);
-            } else alert("كلمة سر خاطئة");
+        // التنقل بين الشاشات
+        function go(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
         }
 
-        // --- الاتصال (PeerJS) ---
-        let peer;
-        function initPeer(id) {
-            peer = new Peer('rabah-' + id);
-            peer.on('open', () => console.log("متصل"));
+        // منطق الشات (PeerJS)
+        let peer = new Peer(); 
+        let conn;
+
+        peer.on('connection', (c) => {
+            conn = c;
+            conn.on('data', (data) => displayMsg(data));
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('msgInput');
+            const msg = input.value;
+            if(conn && msg) {
+                conn.send(msg);
+                displayMsg("أنا: " + msg);
+                input.value = '';
+            }
         }
-        
-        // تفعيل الـ PWA
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+
+        function displayMsg(msg) {
+            const div = document.getElementById('messages');
+            div.innerHTML += `<p>${msg}</p>`;
+        }
     </script>
 </body>
 </html>
