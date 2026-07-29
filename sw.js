@@ -1,4 +1,4 @@
-const CACHE_NAME = 'rabahdj-v2'; // قم بتغيير الرقم عند كل تحديث رئيسي
+const CACHE_NAME = 'v3'; // قم بتغيير الرقم عند كل تحديث رئيسي
 const ASSETS = [
   '/',
   '/index.html',
