@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RabahDj</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,'Segoe UI',Tahoma}
+body{background:linear-gradient(160deg,#0b1220,#141d33 60%,#1a2238);color:#fff;min-height:100vh}
+.screen{display:none;flex-direction:column;align-items:center;padding:20px;min-height:100vh}
+.screen.active{display:flex}
+h1{font-size:44px;font-weight:800;margin-top:30px}
+h1 span{color:#3b82f6}
+.sub{color:#60a5fa;margin:14px 0 6px;font-size:18px}
+.desc{color:#94a3b8;text-align:center;margin:6px 0 24px;line-height:1.9}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;max-width:430px}
+.card{border-radius:22px;padding:26px 14px;display:flex;flex-direction:column;align-items:center;gap:16px;cursor:pointer;border:1px solid #ffffff14;transition:.2s}
+.card:active{transform:scale(.96)}
+.card .ic{width:74px;height:74px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:32px}
+.c1{background:linear-gradient(160deg,#3b2a63,#2a2050)}.c1 .ic{background:#7c1fd9}
+.c2{background:linear-gradient(160deg,#4a2530,#341c26)}.c2 .ic{background:#d40f1e}
+.c3{background:linear-gradient(160deg,#1d4034,#173329)}.c3 .ic{background:#0d9e3f}
+.c4{background:linear-gradient(160deg,#22375e,#1b2b4a)}.c4 .ic{background:#1668e3}
+.top{width:100%;max-width:430px;display:flex;justify-content:space-between;align-items:center}
+.back{background:#ffffff14;border:none;color:#fff;width:44px;height:44px;border-radius:14px;font-size:20px;cursor:pointer}
+.status{font-size:13px;color:#4ade80;background:#4ade8018;padding:6px 12px;border-radius:20px}
+.box{width:100%;max-width:430px;background:#ffffff0a;border:1px solid #ffffff14;border-radius:18px;padding:16px;margin-top:14px}
+input,button.act{width:100%;padding:14px;border-radius:12px;border:1px solid #ffffff22;background:#0f172a;color:#fff;font-size:16px;margin-top:10px}
+button.act{background:#2563eb;border:none;font-weight:700;cursor:pointer}
+button.act.red{background:#dc2626}
+button.act.green{background:#16a34a}
+#msgs{width:100%;max-width:430px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:10px 0;max-height:55vh}
+.msg{background:#ffffff12;padding:10px 14px;border-radius:14px;max-width:85%;align-self:flex-start}
+.msg.me{align-self:flex-end;background:#2563eb33}
+.msg small{display:block;color:#93c5fd;font-size:11px;margin-bottom:4px}
+.row{display:flex;gap:8px;width:100%;max-width:430px}
+.ptt{width:150px;height:150px;border-radius:50%;background:#16a34a;border:6px solid #16a34a55;color:#fff;font-size:18px;font-weight:800;cursor:pointer;margin:40px 0;user-select:none;touch-action:none}
+.ptt.on{background:#dc2626;border-color:#dc262655}
+video{width:100%;max-width:430px;border-radius:16px;background:#000;margin-top:10px}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000c;padding:10px 18px;border-radius:12px;font-size:14px;display:none;z-index:9}
+</style>
+</head>
+<body>
+<section id="home" class="screen active">
+  <h1>Rabah<span>Dj</span></h1>
+  <div class="sub">شبكتك الاجتماعية المحلية</div>
+  <p class="desc">اتصل، شارك، وابث صوتاً وفيديو مع أصدقائك<br>عبر شبكتك المحلية</p>
+  <div class="grid">
+    <div class="card c1" onclick="go('live')"><div class="ic">📡</div>بث مباشر</div>
+    <div class="card c2" onclick="go('cinema')"><div class="ic">🎬</div>سينما وتلفاز</div>
+    <div class="card c3" onclick="go('walkie')"><div class="ic">🎙️</div>تخاطب لاسلكي</div>
+    <div class="card c4" onclick="go('chat')"><div class="ic">💬</div>محادثات فورية</div>
+  </div>
+  <div class="box">
+    <input id="name" placeholder="اسمك">
+    <input id="room" placeholder="رمز الغرفة (مثلاً: 100)">
+    <button class="act" onclick="join()">اتصال بالغرفة</button>
+  </div>
+  <div class="status" id="st" style="margin-top:14px">غير متصل</div>
+</section>
+<section id="chat" class="screen">
+  <div class="top"><button class="back" onclick="go('home')">←</button><b>محادثات فورية</b><span class="status" id="st2"></span></div>
+  <div id="msgs"></div>
+  <div class="row"><input id="txt" placeholder="اكتب رسالة..." style="margin:0"><button class="act" style="width:110px;margin:0" onclick="sendChat()">إرسال</button></div>
+</section>
+<section id="walkie" class="screen">
+  <div class="top"><button class="back" onclick="go('home')">←</button><b>تخاطب لاسلكي</b><span></span></div>
+  <p class="desc">اضغط مع الاستمرار للتحدث، وأفلت للإرسال</p>
+  <button class="ptt" id="ptt">اضغط<br>وتحدث</button>
+</section>
+<section id="live" class="screen">
+  <div class="top"><button class="back" onclick="stopLive();go('home')">←</button><b>بث مباشر</b><span></span></div>
+  <button class="act red" id="liveBtn" onclick="toggleLive()">بدء البث بالكاميرا</button>
+  <video id="myVid" autoplay muted playsinline style="display:none"></video>
+  <div id="watchBox" class="box" style="display:none;text-align:center">
+    <p id="liveWho"></p>
+    <button class="act" onclick="watchLive()">مشاهدة البث</button>
+  </div>
+  <video id="remVid" autoplay playsinline style="display:none"></video>
+</section>
+<section id="cinema" class="screen">
+  <div class="top"><button class="back" onclick="go('home')">←</button><b>سينما وتلفاز</b><span></span></div>
+  <div class="box">
+    <input id="vidUrl" placeholder="رابط فيديو mp4 أو YouTube">
+    <button class="act green" onclick="playCinema(true)">عرض للجميع</button>
+  </div>
+  <div id="cinemaBox" style="width:100%;max-width:430px;margin-top:10px"></div>
+</section>
+<div id="toast"></div>
+<script>
+let peer=null, conns=new Map(), myName='', room='', isHost=false;
+let liveStream=null, liveFrom=null, rec=null, chunks=[], hostId='';
+const $=s=>document.querySelector(s);
+const go=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('#'+id).classList.add('active');};
+const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2500);};
+const setStatus=m=>{$('#st').textContent=m;$('#st2').textContent=m;};
+function join(){
+  myName=$('#name').value.trim()||('مستخدم'+Math.floor(Math.random()*99));
+  room=($('#room').value.trim()||'100');
+  hostId='rabahdj-room-'+room;
+  peer=new Peer(hostId);
+  wire();
+  peer.on('open',()=>{isHost=true;ready();});
+  peer.on('error',e=>{
+    if(e.type==='unavailable-id'){
+      peer.destroy();
+      peer=new Peer();
+      wire();
+      peer.on('open',()=>{
+        isHost=false;
+        const c=peer.connect(hostId,{metadata:{name:myName}});
+        c.on('open',()=>addConn(c));
+        ready();
+      });
+    } else toast('خطأ: '+e.type);
+  });
+}
+function wire(){
+  peer.on('connection',c=>c.on('open',()=>{
+    addConn(c);
+    if(isHost) broadcast({type:'join',id:c.peer,name:c.metadata?.name||'?'});
+  }));
+  peer.on('call',call=>{
+    if(liveStream) call.answer(liveStream); else call.answer();
+    call.on('stream',s=>{$('#remVid').srcObject=s;$('#remVid').style.display='block';});
+  });
+}
+function ready(){setStatus('متصل • '+room+' ('+(conns.size+1)+')');toast('تم الاتصال بالغرفة '+room);}
+function addConn(c){
+  conns.set(c.peer,{c,name:c.metadata?.name||'?'});
+  c.on('data',d=>handle(d,c.peer));
+  c.on('close',()=>{conns.delete(c.peer);setStatus('متصل • '+room+' ('+(conns.size+1)+')');});
+  setStatus('متصل • '+room+' ('+(conns.size+1)+')');
+}
+function connectTo(id){if(id!==peer.id&&!conns.has(id)){const c=peer.connect(id,{metadata:{name:myName}});c.on('open',()=>addConn(c));}}
+function broadcast(o){conns.forEach(({c})=>{if(c.open)c.send(o);});}
+function handle(d,from){
+  if(d.type==='join') connectTo(d.id);
+  if(d.type==='chat') addMsg(d.name,d.text,false);
+  if(d.type==='ptt'){
+    const a=new Audio(URL.createObjectURL(new Blob([d.buf],{type:'audio/webm'})));
+    a.play(); toast('🔊 رسالة صوتية من '+d.name);
+  }
+  if(d.type==='live'){
+    if(d.on){liveFrom=from;$('#liveWho').textContent=d.name+' يبث الآن';$('#watchBox').style.display='block';toast('📡 بث مباشر من '+d.name);}
+    else{liveFrom=null;$('#watchBox').style.display='none';$('#remVid').style.display='none';}
+  }
+  if(d.type==='cinema') renderCinema(d.url);
+}
+function sendChat(){
+  const t=$('#txt').value.trim(); if(!t)return;
+  broadcast({type:'chat',name:myName,text:t});
+  addMsg(myName,t,true); $('#txt').value='';
+}
+function addMsg(n,t,me){
+  const div=document.createElement('div');
+  div.className='msg'+(me?' me':'');
+  div.innerHTML='<small>'+n+'</small>'+t.replace(/</g,'&lt;');
+  $('#msgs').appendChild(div); $('#msgs').scrollTop=1e9;
+}
+const ptt=$('#ptt');
+ptt.onpointerdown=async()=>{
+  try{
+    const s=await navigator.mediaDevices.getUserMedia({audio:true});
+    rec=new MediaRecorder(s); chunks=[];
+    rec.ondataavailable=e=>chunks.push(e.data);
+    rec.onstop=()=>{
+      new Blob(chunks).arrayBuffer().then(buf=>{
+        broadcast({type:'ptt',name:myName,buf});
+        toast('تم إرسال الرسالة الصوتية');
+      });
+      s.getTracks().forEach(t=>t.stop());
+    };
+    rec.start(); ptt.classList.add('on'); ptt.innerHTML='جارٍ<br>التسجيل';
+  }catch(e){toast('اسمح بالوصول للميكروفون');}
+};
+const stopPtt=()=>{if(rec&&rec.state!=='inactive'){rec.stop();ptt.classList.remove('on');ptt.innerHTML='اضغط<br>وتحدث';}};
+ptt.onpointerup=stopPtt; ptt.onpointerleave=stopPtt;
+async function toggleLive(){
+  if(liveStream){stopLive();return;}
+  try{
+    liveStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    $('#myVid').srcObject=liveStream; $('#myVid').style.display='block';
+    $('#liveBtn').textContent='إيقاف البث';
+    broadcast({type:'live',on:true,name:myName});
+  }catch(e){toast('اسمح بالوصول للكاميرا');}
+}
+function stopLive(){
+  if(!liveStream)return;
+  liveStream.getTracks().forEach(t=>t.stop()); liveStream=null;
+  $('#myVid').style.display='none'; $('#liveBtn').textContent='بدء البث بالكاميرا';
+  broadcast({type:'live',on:false});
+}
+function watchLive(){if(liveFrom){const c=peer.call(liveFrom,new MediaStream(),{metadata:{kind:'live'}});
+  c.on('stream',s=>{$('#remVid').srcObject=s;$('#remVid').style.display='block';});}}
+function playCinema(share){
+  const url=$('#vidUrl').value.trim(); if(!url)return;
+  renderCinema(url);
+  if(share)broadcast({type:'cinema',url});
+}
+function renderCinema(url){
+  const box=$('#cinemaBox'); let yt=url.match(/(?:youtu\.be\/|v=)([\w-]{11})/);
+  box.innerHTML = yt
+    ? '<iframe width="100%" height="240" src="https://www.youtube.com/embed/'+yt[1]+'" frameborder="0" allowfullscreen style="border-radius:16px"></iframe>'
+    : '<video controls autoplay src="'+url+'" style="display:block"></video>';
+}
+$('#txt').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
+</script>
+</body>
+</html>
