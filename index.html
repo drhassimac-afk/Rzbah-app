@@ -7,35 +7,67 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        body { background: #0b1220; color: #fff; font-family: sans-serif; margin: 0; padding: 0; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 15px 0; background: #162033; }
-        .screen { padding: 20px; display: none; }
+        :root { --bg: #0b1220; --glass: rgba(255, 255, 255, 0.08); }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        
+        /* تأثير الزجاج - Glassmorphism */
+        .glass-card { 
+            background: var(--glass); 
+            backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px; 
+            padding: 20px; 
+            margin: 15px;
+        }
+
+        .screen { display: none; padding-bottom: 80px; }
         .active { display: block; }
-        button { cursor: pointer; padding: 10px; margin: 5px; }
+
+        .nav-bar { 
+            position: fixed; bottom: 0; width: 100%; display: flex; 
+            justify-content: space-around; padding: 15px 0; 
+            background: rgba(22, 32, 51, 0.9); backdrop-filter: blur(10px);
+        }
+
+        button { 
+            background: #2563eb; border: none; color: white; 
+            padding: 10px 20px; border-radius: 12px; cursor: pointer; 
+        }
+        
+        input { 
+            background: #1e293b; border: 1px solid #334155; 
+            padding: 10px; border-radius: 10px; color: white; width: 80%; 
+        }
     </style>
 </head>
 <body>
 
+    <!-- الشاشة الرئيسية -->
     <div id="home" class="screen active">
-        <h1>الرئيسية</h1>
-        <input id="roomInput" placeholder="رقم الغرفة">
-        <button onclick="initConnection()">الاتصال بالغرفة</button>
-        <button onclick="adminLogin()">الإعدادات</button>
+        <div class="glass-card">
+            <h1>مرحباً بك في RabahDj</h1>
+            <input id="roomInput" placeholder="رقم الغرفة">
+            <button onclick="initConnection()">اتصال</button>
+        </div>
     </div>
 
+    <!-- صفحة الإعدادات -->
     <div id="settings" class="screen">
-        <h1>الإعدادات</h1>
-        <button onclick="changePassword()">تغيير كلمة مرور الأدمن</button>
-        <button onclick="go('home')">رجوع</button>
+        <div class="glass-card">
+            <h1>الإعدادات</h1>
+            <button onclick="changePassword()">تغيير كلمة مرور الأدمن</button>
+            <button onclick="go('home')">رجوع</button>
+        </div>
     </div>
 
+    <!-- الشريط السفلي -->
     <div class="nav-bar">
         <button onclick="go('home')">الرئيسية</button>
         <button onclick="adminLogin()">الإعدادات</button>
     </div>
 
     <script>
-        // --- 1. منطق الأدمن ---
+        // --- منطق الأدمن ---
         if (!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '1234');
 
         function go(id) {
@@ -60,35 +92,16 @@
             } else alert("كلمة المرور الحالية غير صحيحة");
         }
 
-        // --- 2. منطق الاتصال المركزي (PeerJS) ---
+        // --- منطق الاتصال ---
         let peer;
         let connections = [];
 
         function initConnection() {
             const room = document.getElementById('roomInput').value;
             if (!room) return alert("يرجى إدخال رقم الغرفة");
-            
             peer = new Peer('rabah-' + room);
-            
-            peer.on('open', (id) => {
-                alert("تم الاتصال بنجاح. معرفك: " + id);
-            });
-
-            peer.on('connection', (conn) => {
-                setupConnection(conn);
-            });
-        }
-
-        function setupConnection(conn) {
-            connections.push(conn);
-            conn.on('data', (data) => {
-                console.log("تم استلام بيانات:", data);
-                // هنا سيتم إضافة منطق توزيع البيانات (شات، ألعاب، إلخ)
-            });
-        }
-
-        function broadcast(data) {
-            connections.forEach(conn => conn.send(data));
+            peer.on('open', (id) => alert("تم الاتصال بنجاح!"));
+            peer.on('connection', (conn) => connections.push(conn));
         }
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
