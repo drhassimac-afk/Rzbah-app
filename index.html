@@ -5,19 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RabahDj</title>
     <link rel="manifest" href="manifest.json">
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         body { background: #0b1220; color: #fff; font-family: sans-serif; margin: 0; padding: 0; }
         .nav-bar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 15px 0; background: #162033; }
         .screen { padding: 20px; display: none; }
         .active { display: block; }
-        button { cursor: pointer; }
+        button { cursor: pointer; padding: 10px; margin: 5px; }
     </style>
 </head>
 <body>
 
     <div id="home" class="screen active">
         <h1>الرئيسية</h1>
-        <button onclick="adminLogin()">دخول الإعدادات (الأدمن)</button>
+        <input id="roomInput" placeholder="رقم الغرفة">
+        <button onclick="initConnection()">الاتصال بالغرفة</button>
+        <button onclick="adminLogin()">الإعدادات</button>
     </div>
 
     <div id="settings" class="screen">
@@ -32,10 +35,8 @@
     </div>
 
     <script>
-        // تهيئة كلمة السر الافتراضية
-        if (!localStorage.getItem('adminPass')) {
-            localStorage.setItem('adminPass', '1234');
-        }
+        // --- 1. منطق الأدمن ---
+        if (!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '1234');
 
         function go(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -44,11 +45,8 @@
 
         function adminLogin() {
             const input = prompt("أدخل كلمة مرور الأدمن:");
-            if (input === localStorage.getItem('adminPass')) {
-                go('settings');
-            } else {
-                alert("كلمة مرور غير صحيحة");
-            }
+            if (input === localStorage.getItem('adminPass')) go('settings');
+            else alert("كلمة مرور غير صحيحة");
         }
 
         function changePassword() {
@@ -59,9 +57,38 @@
                     localStorage.setItem('adminPass', newPass);
                     alert("تم تحديث كلمة المرور");
                 }
-            } else {
-                alert("كلمة المرور الحالية غير صحيحة");
-            }
+            } else alert("كلمة المرور الحالية غير صحيحة");
+        }
+
+        // --- 2. منطق الاتصال المركزي (PeerJS) ---
+        let peer;
+        let connections = [];
+
+        function initConnection() {
+            const room = document.getElementById('roomInput').value;
+            if (!room) return alert("يرجى إدخال رقم الغرفة");
+            
+            peer = new Peer('rabah-' + room);
+            
+            peer.on('open', (id) => {
+                alert("تم الاتصال بنجاح. معرفك: " + id);
+            });
+
+            peer.on('connection', (conn) => {
+                setupConnection(conn);
+            });
+        }
+
+        function setupConnection(conn) {
+            connections.push(conn);
+            conn.on('data', (data) => {
+                console.log("تم استلام بيانات:", data);
+                // هنا سيتم إضافة منطق توزيع البيانات (شات، ألعاب، إلخ)
+            });
+        }
+
+        function broadcast(data) {
+            connections.forEach(conn => conn.send(data));
         }
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
