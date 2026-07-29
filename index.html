@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RabahDj</title>
+    <title>RabahDj - Ultimate</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
         :root { --bg: #0b1220; --glass: rgba(255, 255, 255, 0.08); }
         body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; }
-        
         .screen { display: none; }
         .active { display: block; }
-        
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
         .card { background: var(--glass); backdrop-filter: blur(15px); padding: 20px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
         .card:active { transform: scale(0.95); }
-        
         .container { padding: 20px; text-align: center; }
-        #messages { height: 250px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 15px; padding: 10px; margin-bottom: 10px; text-align: right; border: 1px solid rgba(255,255,255,0.1); }
-        input#msgInput { width: 60%; padding: 10px; border-radius: 10px; border: none; }
         
-        video, iframe { width: 100%; height: 350px; border-radius: 15px; background: #000; border: none; margin-bottom: 10px; }
+        /* Video UI */
+        video { width: 100%; height: 250px; border-radius: 15px; background: #000; margin-bottom: 10px; }
+        
+        /* Chat UI */
+        #messages { height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 20px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .msg-bubble { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 0.9rem; }
+        .my-msg { background: #3b82f6; align-self: flex-end; color: white; border-bottom-right-radius: 2px; }
+        .other-msg { background: #1e293b; align-self: flex-start; color: #e2e8f0; border-bottom-left-radius: 2px; }
+        .time-label { font-size: 0.6rem; opacity: 0.7; margin-top: 5px; text-align: left; }
         
         .nav-bar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 15px 0; background: rgba(11, 18, 32, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #1e293b; }
         .nav-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; }
@@ -30,188 +33,141 @@
 </head>
 <body>
 
-    <!-- الشاشة الرئيسية -->
+    <!-- Home Screen -->
     <div id="home" class="screen active">
         <header style="text-align: center; padding: 30px 20px;"><h1>RabahDj</h1></header>
         <div class="grid">
-            <div class="card" onclick="go('cinema-screen')"><i class="fa-solid fa-film" style="color: #ef4444;"></i><br>سينما</div>
-            <div class="card" onclick="go('game-screen')"><i class="fa-solid fa-gamepad" style="color: #f59e0b;"></i><br>ألعاب</div>
-            <div class="card" onclick="go('video-screen')"><i class="fa-solid fa-video" style="color: #ef4444;"></i><br>بث مباشر</div>
-            <div class="card" onmousedown="startRecording()" onmouseup="stopRecording()" style="border: 2px solid #22c55e;"><i class="fa-solid fa-microphone" style="color: #22c55e;"></i><br>تخاطب</div>
             <div class="card" onclick="go('chat-screen')"><i class="fa-solid fa-comments" style="color: #3b82f6;"></i><br>محادثات</div>
+            <div class="card" onclick="go('video-screen')"><i class="fa-solid fa-video" style="color: #ef4444;"></i><br>فيديو</div>
+            <!-- زر التخاطب (اضغط للتحدث) -->
+            <div class="card" onmousedown="startRecording()" onmouseup="stopRecording()" style="border: 2px solid #22c55e;">
+                <i class="fa-solid fa-microphone" style="color: #22c55e;"></i><br>تخاطب (اضغط)
+            </div>
+            <div class="card" onclick="go('cinema-screen')"><i class="fa-solid fa-film" style="color: #f59e0b;"></i><br>سينما</div>
         </div>
     </div>
 
-    <!-- شاشة السينما -->
-    <div id="cinema-screen" class="screen">
-        <div class="container">
-            <h3>مكتبة السينما</h3>
-            <div id="movieList" class="grid"></div>
-            <button onclick="go('home')">رجوع</button>
-        </div>
-    </div>
-
-    <!-- شاشة الألعاب -->
-    <div id="game-screen" class="screen">
-        <div class="container">
-            <h3>مركز الألعاب</h3>
-            <iframe id="gameFrame" src=""></iframe>
-            <div class="grid" id="gameList"></div>
-            <button onclick="go('home')">خروج</button>
-        </div>
-    </div>
-
-    <!-- شاشة المحادثة -->
+    <!-- Chat Screen -->
     <div id="chat-screen" class="screen">
         <div class="container">
             <h3>المحادثة</h3>
             <div id="messages"></div>
-            <input type="text" id="msgInput" placeholder="اكتب رسالة...">
+            <input type="text" id="msgInput" placeholder="رسالة..." style="width: 70%; padding: 10px;">
             <button onclick="sendMessage()">إرسال</button>
-            <input type="file" id="fileInput" onchange="sendFile(this)" style="display:none;">
-            <button onclick="document.getElementById('fileInput').click()"><i class="fa-solid fa-paperclip"></i></button>
-            <button onclick="go('home')">خروج</button>
+            <button onclick="go('home')">رجوع</button>
         </div>
     </div>
 
-    <!-- شاشة الفيديو -->
+    <!-- Video Screen -->
     <div id="video-screen" class="screen">
         <div class="container">
-            <h3>بث الفيديو</h3>
-            <video id="localVideo" autoplay muted playsinline></video>
+            <h3>بث فيديو</h3>
             <video id="remoteVideo" autoplay playsinline></video>
-            <button onclick="startVideoCall()">بدء البث</button>
-            <button onclick="go('home')">خروج</button>
+            <video id="localVideo" autoplay muted playsinline></video>
+            <button onclick="startVideoCall()">بدء الاتصال</button>
+            <button onclick="go('home')">رجوع</button>
         </div>
     </div>
 
+    <!-- Navigation -->
     <div class="nav-bar">
         <button class="nav-btn" onclick="go('home')"><i class="fa-solid fa-house"></i></button>
         <button class="nav-btn" onclick="adminLogin()"><i class="fa-solid fa-gear"></i></button>
     </div>
 
     <script>
-        // 1. التنقل بين الشاشات
-        function go(id) { 
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
-            document.getElementById(id).classList.add('active'); 
-        }
+        // 1. التنقل
+        function go(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-        // 2. الحفظ في الذاكرة (Persistence)
-        function saveMessage(msg) {
-            let history = JSON.parse(localStorage.getItem('chatHistory') || '[]');
-            history.push(msg);
-            localStorage.setItem('chatHistory', JSON.stringify(history));
-        }
-        function loadMessages() {
-            let history = JSON.parse(localStorage.getItem('chatHistory') || '[]');
-            history.forEach(msg => { document.getElementById('messages').innerHTML += `<p>${msg}</p>`; });
-        }
-        document.addEventListener('DOMContentLoaded', loadMessages);
-
-        // 3. نظام الأدمن (المحدث)
-        if (!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '1234');
-        function adminLogin() {
-            const input = prompt("كلمة مرور الأدمن:");
-            if (input === localStorage.getItem('adminPass')) {
-                const action = prompt("مرحباً أدمن! اختر الإجراء:\n1. مسح سجل المحادثات\n2. تغيير كلمة المرور");
-                if (action === '1') {
-                    localStorage.removeItem('chatHistory');
-                    document.getElementById('messages').innerHTML = '';
-                    alert("تم مسح السجل بنجاح!");
-                } else if (action === '2') {
-                    const newPass = prompt("أدخل كلمة المرور الجديدة:");
-                    if (newPass) {
-                        localStorage.setItem('adminPass', newPass);
-                        alert("تم تغيير كلمة المرور!");
-                    }
-                }
-            } else {
-                alert("كلمة المرور خاطئة!");
-            }
-        }
-
-        const movies = [{ title: 'فيلم 1', url: '#' }, { title: 'فيلم 2', url: '#' }];
-        const games = [{ title: 'لعبة 1', url: 'https://games.example.com/game1' }];
-        function renderLists() {
-            document.getElementById('movieList').innerHTML = movies.map(m => `<div class="card" onclick="window.open('${m.url}')"><i class="fa-solid fa-play"></i><br>${m.title}</div>`).join('');
-            document.getElementById('gameList').innerHTML = games.map(g => `<div class="card" onclick="document.getElementById('gameFrame').src='${g.url}'"><i class="fa-solid fa-gamepad"></i><br>${g.title}</div>`).join('');
-        }
-        renderLists();
-
-        // 4. الاتصال (PeerJS)
+        // 2. الاتصال العام (PeerJS)
         let peer = new Peer();
         let conn;
         peer.on('connection', (c) => {
             conn = c;
             conn.on('data', (data) => {
-                if (data.type === 'file') {
-                    const blob = new Blob([data.file]);
-                    const url = URL.createObjectURL(blob);
-                    let msg = `<a href="${url}" download="${data.name}">تحميل ملف: ${data.name}</a>`;
-                    displayMsg(msg); saveMessage(msg);
-                } else if (data instanceof Blob) {
+                // استقبال صوت (Blob) أو نص
+                if (data instanceof Blob) {
                     const audio = new Audio(URL.createObjectURL(data));
                     audio.play();
                 } else {
-                    displayMsg(data); saveMessage(data);
+                    displayMsg(data, false);
                 }
             });
         });
 
-        // 5. الشات والملفات
+        // 3. الشات النصي
         function sendMessage() {
             const input = document.getElementById('msgInput');
             if(conn && input.value) {
-                let msg = "أنا: " + input.value;
                 conn.send(input.value);
-                displayMsg(msg); saveMessage(msg);
+                displayMsg(input.value, true);
                 input.value = '';
             }
         }
-        function sendFile(input) {
-            const file = input.files[0];
-            if (conn && file) {
-                conn.send({ type: 'file', file: file, name: file.name });
-                let msg = "أرسلت ملف: " + file.name;
-                displayMsg(msg); saveMessage(msg);
-            }
-        }
-        function displayMsg(msg) { document.getElementById('messages').innerHTML += `<p>${msg}</p>`; }
 
-        // 6. التخاطب (Walkie-Talkie)
-        let mediaRecorder; let audioChunks = [];
+        function displayMsg(msg, isMine) {
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const div = document.createElement('div');
+            div.className = `msg-bubble ${isMine ? 'my-msg' : 'other-msg'}`;
+            div.innerHTML = `<div>${msg}</div><div class="time-label">${time}</div>`;
+            document.getElementById('messages').appendChild(div);
+            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        }
+
+        // 4. التخاطب الصوتي (Walkie-Talkie)
+        let mediaRecorder;
+        let audioChunks = [];
+
         async function startRecording() {
+            if (!conn) { alert("يجب الاتصال بصديق أولاً"); return; }
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
-            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
             mediaRecorder.start();
         }
+
         function stopRecording() {
-            mediaRecorder.stop();
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                if (conn) conn.send(audioBlob);
-            };
+            if (mediaRecorder && mediaRecorder.state === "recording") {
+                mediaRecorder.stop();
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    // إرسال الصوت كبيانات ثنائية
+                    conn.send(audioBlob);
+                    displayMsg("<em>[رسالة صوتية مرسلة]</em>", true);
+                };
+            }
         }
 
-        // 7. الفيديو
+        // 5. الفيديو
         async function startVideoCall() {
+            const peerId = prompt("أدخل معرف الصديق:");
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             document.getElementById('localVideo').srcObject = stream;
-            const peerId = prompt("أدخل معرف الصديق:");
             const call = peer.call(peerId, stream);
-            call.on('stream', (remoteStream) => { document.getElementById('remoteVideo').srcObject = remoteStream; });
+            call.on('stream', (remoteStream) => {
+                document.getElementById('remoteVideo').srcObject = remoteStream;
+            });
         }
+
         peer.on('call', async (call) => {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             document.getElementById('localVideo').srcObject = stream;
             call.answer(stream);
-            call.on('stream', (remoteStream) => { document.getElementById('remoteVideo').srcObject = remoteStream; });
+            call.on('stream', (remoteStream) => {
+                document.getElementById('remoteVideo').srcObject = remoteStream;
+            });
             go('video-screen');
         });
 
+        // 6. الأدمن
+        function adminLogin() {
+            if (prompt("كلمة مرور الأدمن:") === '1234') alert("تم الدخول");
+        }
+        
+        // تسجيل الـ Service Worker
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
 </body>
