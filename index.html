@@ -4,76 +4,76 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RabahDj</title>
+    <!-- استدعاء أيقونات احترافية -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        :root { --bg: #0b1220; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+        :root { --bg: #0b1220; --glass: rgba(255, 255, 255, 0.08); }
+        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding-bottom: 90px; }
         
-        /* الرأس */
-        header { text-align: center; padding: 30px 20px; }
-        header h1 { font-size: 2rem; color: #2563eb; margin: 0; }
+        header { text-align: center; padding: 40px 20px; }
+        header h1 { font-size: 2.5rem; color: #3b82f6; margin: 0; }
         
-        /* الشبكة (Grid) */
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
         .card { 
-            background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; 
-            text-align: center; cursor: pointer; transition: 0.3s;
+            background: var(--glass); backdrop-filter: blur(15px);
+            padding: 25px; border-radius: 25px; text-align: center; 
+            border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s;
         }
-        .card:active { transform: scale(0.95); }
-        .icon { font-size: 30px; margin-bottom: 10px; display: block; }
-
-        /* شريط التنقل السفلي */
+        .card:active { transform: scale(0.95); background: rgba(255,255,255,0.15); }
+        .card i { font-size: 35px; margin-bottom: 15px; display: block; color: #fff; }
+        
         .nav-bar { 
-            position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; 
-            padding: 15px 0; background: #162033; backdrop-filter: blur(10px);
+            position: fixed; bottom: 0; width: 100%; display: flex; 
+            justify-content: space-around; padding: 15px 0; 
+            background: rgba(11, 18, 32, 0.95); backdrop-filter: blur(10px);
+            border-top: 1px solid #1e293b;
         }
+        .nav-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>RabahDj</h1>
-        <p>شبكتك الاجتماعية المحلية</p>
+        <p style="color: #94a3b8;">شبكتك الاجتماعية المحلية</p>
     </header>
 
     <div class="grid">
-        <div class="card" style="border-top: 4px solid #ef4444;" onclick="alert('سينما')">
-            <span class="icon">🎬</span> السينما
-        </div>
-        <div class="card" style="border-top: 4px solid #8b5cf6;" onclick="alert('بث مباشر')">
-            <span class="icon">📡</span> بث مباشر
-        </div>
-        <div class="card" style="border-top: 4px solid #22c55e;" onclick="alert('تخاطب')">
-            <span class="icon">🎙️</span> تخاطب
-        </div>
-        <div class="card" style="border-top: 4px solid #3b82f6;" onclick="alert('شات')">
-            <span class="icon">💬</span> محادثات
-        </div>
-        <div class="card" style="border-top: 4px solid #f59e0b; grid-column: span 2;" onclick="alert('ألعاب')">
-            <span class="icon">🎮</span> الألعاب
-        </div>
+        <div class="card" onclick="alert('جارٍ فتح السينما...')"><i class="fa-solid fa-film" style="color: #ef4444;"></i>سينما</div>
+        <div class="card" onclick="alert('جارٍ فتح البث...')"><i class="fa-solid fa-tower-broadcast" style="color: #8b5cf6;"></i>بث مباشر</div>
+        <div class="card" onclick="alert('جارٍ فتح التخاطب...')"><i class="fa-solid fa-microphone-lines" style="color: #22c55e;"></i>تخاطب</div>
+        <div class="card" onclick="alert('جارٍ فتح الشات...')"><i class="fa-solid fa-comments" style="color: #3b82f6;"></i>محادثات</div>
+        <div class="card" style="grid-column: span 2;" onclick="alert('جارٍ فتح الألعاب...')"><i class="fa-solid fa-gamepad" style="color: #f59e0b;"></i>ألعاب</div>
     </div>
 
     <div class="nav-bar">
-        <button onclick="adminLogin()">⚙️ الإعدادات</button>
-        <button onclick="alert('بحث')">🔍 بحث</button>
-        <button onclick="alert('مستخدمون')">👥 مستخدمون</button>
-        <button onclick="window.location.reload()">🏠 الرئيسية</button>
+        <button class="nav-btn" onclick="adminLogin()"><i class="fa-solid fa-gear"></i></button>
+        <button class="nav-btn" onclick="alert('البحث')"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <button class="nav-btn" onclick="alert('المستخدمون')"><i class="fa-solid fa-users"></i></button>
+        <button class="nav-btn" onclick="window.location.reload()"><i class="fa-solid fa-house"></i></button>
     </div>
 
     <script>
-        // منطق الأدمن الأساسي
+        // --- حماية الأدمن ---
         if (!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '1234');
-
         function adminLogin() {
-            const input = prompt("كلمة مرور الأدمن:");
+            const input = prompt("أدخل كلمة مرور الأدمن:");
             if (input === localStorage.getItem('adminPass')) {
-                const newPass = prompt("أدخل كلمة المرور الجديدة (أو إلغاء):");
+                const newPass = prompt("كلمة سر جديدة (أو إلغاء):");
                 if (newPass) localStorage.setItem('adminPass', newPass);
-            } else alert("خطأ");
+            } else alert("كلمة سر خاطئة");
         }
 
+        // --- الاتصال (PeerJS) ---
+        let peer;
+        function initPeer(id) {
+            peer = new Peer('rabah-' + id);
+            peer.on('open', () => console.log("متصل"));
+        }
+        
+        // تفعيل الـ PWA
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
 </body>
