@@ -70,7 +70,7 @@ video{width:100%;max-width:430px;border-radius:16px;background:#000;margin-top:1
     <input id="room" placeholder="رمز الغرفة (مثلاً: 100)">
     <button class="act" onclick="join()">اتصال بالغرفة</button>
   </div>
-  <div class="status" id="st" style="margin-top:14px">غير متصل</div>
+  <div class="status" id="st" style="margin-top:14px; background-color: rgba(239, 68, 68, 0.1); color: #f87171;">غير متصل</div>
 </section>
 
 <!-- شاشة تسجيل دخول الأدمن -->
@@ -118,7 +118,7 @@ video{width:100%;max-width:430px;border-radius:16px;background:#000;margin-top:1
   <div class="top"><button class="back" onclick="go('home')">←</button><b>محادثات فورية</b><span class="status" id="st2"></span></div>
   <div id="msgs"></div>
   <div class="row"><input id="txt" placeholder="اكتب رسالة..." style="margin:0"><button class="act" style="width:110px;margin:0" onclick="sendChat()">إرسال</button></div>
-</</section>
+</section>
 
 <!-- لاسلكي -->
 <section id="walkie" class="screen">
@@ -154,7 +154,7 @@ video{width:100%;max-width:430px;border-radius:16px;background:#000;margin-top:1
 <script>
 // إعدادات الأدمن والكلمة الافتراضية
 if(!localStorage.getItem('admin_pwd')){
-  localStorage.setItem('admin_pwd', '1234'); // الباسورد الافتراضي
+  localStorage.setItem('admin_pwd', '1234');
 }
 
 let peer=null, conns=new Map(), myName='', room='', isHost=false;
@@ -162,7 +162,18 @@ let liveStream=null, liveFrom=null, rec=null, chunks=[], hostId='';
 const $=s=>document.querySelector(s);
 const go=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('#'+id).classList.add('active');};
 const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3500);};
-const setStatus=m=>{$('#st').textContent=m;$('#st2').textContent=m;};
+const setStatus=(m, isError=false)=>{
+  const st = $('#st');
+  st.textContent=m;
+  $('#st2').textContent=m;
+  if(isError) {
+    st.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
+    st.style.color = "#f87171";
+  } else {
+    st.style.backgroundColor = "rgba(74, 222, 128, 0.1)";
+    st.style.color = "#4ade80";
+  }
+};
 
 // فحص كلمة مرور الأدمن
 function checkAdminPass() {
@@ -186,18 +197,40 @@ function changeAdminPass() {
   toast('✅ تم تحديث كلمة مرور الأدمن بنجاح!');
 }
 
+// إعدادات الاتصال الآمن بـ PeerJS متجاوزاً حظر الشبكات
+const peerConfig = {
+  host: '0.peerjs.com',
+  port: 443,
+  secure: true,
+  pingInterval: 5000,
+  debug: 1
+};
+
 // اتصال الأجهزة
 function join(){
   myName=$('#name').value.trim()||('مستخدم'+Math.floor(Math.random()*99));
   room=($('#room').value.trim()||'100');
   hostId='rabahdj-room-'+room;
-  peer=new Peer(hostId);
+  
+  setStatus('جاري الاتصال بالسيرفر...');
+  
+  if (peer) { try { peer.destroy(); } catch(e){} }
+
+  // محاولة الاتصال كمستضيف للغرفة أولاً
+  peer = new Peer(hostId, peerConfig);
   wire();
-  peer.on('open',()=>{isHost=true;ready();});
-  peer.on('error',e=>{
-    if(e.type==='unavailable-id'){
+  
+  peer.on('open',()=>{
+    isHost=true;
+    ready();
+  });
+  
+  peer.on('error', e => {
+    console.error('PeerJS Error:', e.type);
+    if(e.type === 'unavailable-id'){
+      // الغرفة محجوزة مسبقاً، سيتصل كعميل مستمع
       peer.destroy();
-      peer=new Peer();
+      peer = new Peer(null, peerConfig);
       wire();
       peer.on('open',()=>{
         isHost=false;
@@ -205,7 +238,12 @@ function join(){
         c.on('open',()=>addConn(c));
         ready();
       });
-    } else toast('خطأ: '+e.type);
+    } else if (e.type === 'network') {
+      setStatus('خطأ في الشبكة! يرجى تشغيل الـ VPN أو الواي فاي', true);
+      toast('⚠️ شبكة الاتصال تمنع الربط المباشر. يفضل تفعيل VPN.');
+    } else {
+      setStatus('خطأ: ' + e.type, true);
+    }
   });
 }
 
@@ -220,15 +258,33 @@ function wire(){
   });
 }
 
-function ready(){setStatus('متصل • '+room+' ('+(conns.size+1)+')');toast('تم الاتصال بالغرفة '+room);}
+function ready(){
+  setStatus('متصل • الغرفة: '+room+' ('+(conns.size+1)+')');
+  toast('🟢 تم الاتصال بالغرفة '+room);
+}
+
 function addConn(c){
   conns.set(c.peer,{c,name:c.metadata?.name||'?'});
   c.on('data',d=>handle(d,c.peer));
-  c.on('close',()=>{conns.delete(c.peer);setStatus('متصل • '+room+' ('+(conns.size+1)+')');});
-  setStatus('متصل • '+room+' ('+(conns.size+1)+')');
+  c.on('close',()=>{
+    conns.delete(c.peer);
+    setStatus('متصل • الغرفة: '+room+' ('+(conns.size+1)+')');
+  });
+  setStatus('متصل • الغرفة: '+room+' ('+(conns.size+1)+')');
 }
-function connectTo(id){if(id!==peer.id&&!conns.has(id)){const c=peer.connect(id,{metadata:{name:myName}});c.on('open',()=>addConn(c));}}
-function broadcast(o){conns.forEach(({c})=>{if(c.open)c.send(o);});}
+
+function connectTo(id){
+  if(id!==peer.id&&!conns.has(id)){
+    const c=peer.connect(id,{metadata:{name:myName}});
+    c.on('open',()=>addConn(c));
+  }
+}
+
+function broadcast(o){
+  conns.forEach(({c})=>{
+    if(c.open) c.send(o);
+  });
+}
 
 // معالجة البيانات والتحكم بالأدمن للأجهزة المتصلة
 function handle(d,from){
@@ -246,16 +302,16 @@ function handle(d,from){
   
   // أوامر الأدمن المستلمة
   if(d.type==='admin_alert'){
-    alert("📢 تنبيه من الأدمن:\n\n" + d.text);
+    alert("📢 تنبيه عاجل من الأدمن:\n\n" + d.text);
   }
   if(d.type==='admin_clear_chat'){
     $('#msgs').innerHTML = '';
-    toast('🧹 قام الأدمن بمسح المحادثات للجميع');
+    toast('🧹 قام الأدمن بمسح سجل المحادثات للجميع');
   }
   if(d.type==='admin_force_cinema'){
     go('cinema');
     renderCinema(d.url);
-    toast('🎬 قام الأدمن بفرض تشغيل عرض الآن');
+    toast('🎬 فرض الأدمن تشغيل عرض فيديو الآن');
   }
 }
 
