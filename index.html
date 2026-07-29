@@ -7,101 +7,71 @@
     <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        :root { --bg: #0b1220; --glass: rgba(255, 255, 255, 0.08); }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; }
+        :root { --bg: #0b1220; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
         
-        /* تأثير الزجاج - Glassmorphism */
-        .glass-card { 
-            background: var(--glass); 
-            backdrop-filter: blur(15px); 
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 20px; 
-            padding: 20px; 
-            margin: 15px;
+        /* الرأس */
+        header { text-align: center; padding: 30px 20px; }
+        header h1 { font-size: 2rem; color: #2563eb; margin: 0; }
+        
+        /* الشبكة (Grid) */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
+        .card { 
+            background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; 
+            text-align: center; cursor: pointer; transition: 0.3s;
         }
+        .card:active { transform: scale(0.95); }
+        .icon { font-size: 30px; margin-bottom: 10px; display: block; }
 
-        .screen { display: none; padding-bottom: 80px; }
-        .active { display: block; }
-
+        /* شريط التنقل السفلي */
         .nav-bar { 
-            position: fixed; bottom: 0; width: 100%; display: flex; 
-            justify-content: space-around; padding: 15px 0; 
-            background: rgba(22, 32, 51, 0.9); backdrop-filter: blur(10px);
-        }
-
-        button { 
-            background: #2563eb; border: none; color: white; 
-            padding: 10px 20px; border-radius: 12px; cursor: pointer; 
-        }
-        
-        input { 
-            background: #1e293b; border: 1px solid #334155; 
-            padding: 10px; border-radius: 10px; color: white; width: 80%; 
+            position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; 
+            padding: 15px 0; background: #162033; backdrop-filter: blur(10px);
         }
     </style>
 </head>
 <body>
 
-    <!-- الشاشة الرئيسية -->
-    <div id="home" class="screen active">
-        <div class="glass-card">
-            <h1>مرحباً بك في RabahDj</h1>
-            <input id="roomInput" placeholder="رقم الغرفة">
-            <button onclick="initConnection()">اتصال</button>
+    <header>
+        <h1>RabahDj</h1>
+        <p>شبكتك الاجتماعية المحلية</p>
+    </header>
+
+    <div class="grid">
+        <div class="card" style="border-top: 4px solid #ef4444;" onclick="alert('سينما')">
+            <span class="icon">🎬</span> السينما
+        </div>
+        <div class="card" style="border-top: 4px solid #8b5cf6;" onclick="alert('بث مباشر')">
+            <span class="icon">📡</span> بث مباشر
+        </div>
+        <div class="card" style="border-top: 4px solid #22c55e;" onclick="alert('تخاطب')">
+            <span class="icon">🎙️</span> تخاطب
+        </div>
+        <div class="card" style="border-top: 4px solid #3b82f6;" onclick="alert('شات')">
+            <span class="icon">💬</span> محادثات
+        </div>
+        <div class="card" style="border-top: 4px solid #f59e0b; grid-column: span 2;" onclick="alert('ألعاب')">
+            <span class="icon">🎮</span> الألعاب
         </div>
     </div>
 
-    <!-- صفحة الإعدادات -->
-    <div id="settings" class="screen">
-        <div class="glass-card">
-            <h1>الإعدادات</h1>
-            <button onclick="changePassword()">تغيير كلمة مرور الأدمن</button>
-            <button onclick="go('home')">رجوع</button>
-        </div>
-    </div>
-
-    <!-- الشريط السفلي -->
     <div class="nav-bar">
-        <button onclick="go('home')">الرئيسية</button>
-        <button onclick="adminLogin()">الإعدادات</button>
+        <button onclick="adminLogin()">⚙️ الإعدادات</button>
+        <button onclick="alert('بحث')">🔍 بحث</button>
+        <button onclick="alert('مستخدمون')">👥 مستخدمون</button>
+        <button onclick="window.location.reload()">🏠 الرئيسية</button>
     </div>
 
     <script>
-        // --- منطق الأدمن ---
+        // منطق الأدمن الأساسي
         if (!localStorage.getItem('adminPass')) localStorage.setItem('adminPass', '1234');
 
-        function go(id) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-        }
-
         function adminLogin() {
-            const input = prompt("أدخل كلمة مرور الأدمن:");
-            if (input === localStorage.getItem('adminPass')) go('settings');
-            else alert("كلمة مرور غير صحيحة");
-        }
-
-        function changePassword() {
-            const oldPass = prompt("أدخل كلمة المرور الحالية:");
-            if (oldPass === localStorage.getItem('adminPass')) {
-                const newPass = prompt("أدخل كلمة المرور الجديدة:");
-                if (newPass) {
-                    localStorage.setItem('adminPass', newPass);
-                    alert("تم تحديث كلمة المرور");
-                }
-            } else alert("كلمة المرور الحالية غير صحيحة");
-        }
-
-        // --- منطق الاتصال ---
-        let peer;
-        let connections = [];
-
-        function initConnection() {
-            const room = document.getElementById('roomInput').value;
-            if (!room) return alert("يرجى إدخال رقم الغرفة");
-            peer = new Peer('rabah-' + room);
-            peer.on('open', (id) => alert("تم الاتصال بنجاح!"));
-            peer.on('connection', (conn) => connections.push(conn));
+            const input = prompt("كلمة مرور الأدمن:");
+            if (input === localStorage.getItem('adminPass')) {
+                const newPass = prompt("أدخل كلمة المرور الجديدة (أو إلغاء):");
+                if (newPass) localStorage.setItem('adminPass', newPass);
+            } else alert("خطأ");
         }
 
         if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
