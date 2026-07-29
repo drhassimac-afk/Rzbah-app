@@ -4,7 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RabahDj</title>
+<!-- مكتبة الاتصال المباشر -->
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<!-- ربط تطبيق الويب القابل للتثبيت PWA -->
+<link rel="manifest" href="manifest.json">
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js');
+  }
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:system-ui,'Segoe UI',Tahoma}
 body{background:linear-gradient(160deg,#0b1220,#141d33 60%,#1a2238);color:#fff;min-height:100vh}
@@ -38,11 +46,16 @@ button.act.green{background:#16a34a}
 .ptt{width:150px;height:150px;border-radius:50%;background:#16a34a;border:6px solid #16a34a55;color:#fff;font-size:18px;font-weight:800;cursor:pointer;margin:40px 0;user-select:none;touch-action:none}
 .ptt.on{background:#dc2626;border-color:#dc262655}
 video{width:100%;max-width:430px;border-radius:16px;background:#000;margin-top:10px}
-#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000c;padding:10px 18px;border-radius:12px;font-size:14px;display:none;z-index:9}
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000c;padding:10px 18px;border-radius:12px;font-size:14px;display:none;z-index:9999}
+/* زر الأدمن السري */
+.admin-lock{position:absolute;top:20px;right:20px;background:#ffffff14;border:none;color:#fff;width:40px;height:40px;border-radius:50%;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 </style>
 </head>
 <body>
+
+<!-- شاشة الرئيسية -->
 <section id="home" class="screen active">
+  <button class="admin-lock" onclick="go('admin_login')">🔒</button>
   <h1>Rabah<span>Dj</span></h1>
   <div class="sub">شبكتك الاجتماعية المحلية</div>
   <p class="desc">اتصل، شارك، وابث صوتاً وفيديو مع أصدقائك<br>عبر شبكتك المحلية</p>
@@ -59,16 +72,62 @@ video{width:100%;max-width:430px;border-radius:16px;background:#000;margin-top:1
   </div>
   <div class="status" id="st" style="margin-top:14px">غير متصل</div>
 </section>
+
+<!-- شاشة تسجيل دخول الأدمن -->
+<section id="admin_login" class="screen">
+  <div class="top"><button class="back" onclick="go('home')">←</button><b>بوابة الأدمن</b><span></span></div>
+  <div class="box" style="margin-top: 50px;">
+    <h3 style="text-align: center; margin-bottom: 10px;">أدخل كلمة مرور المسؤول</h3>
+    <input id="admin_pass_input" type="password" placeholder="كلمة المرور">
+    <button class="act" onclick="checkAdminPass()">دخول</button>
+  </div>
+</section>
+
+<!-- لوحة تحكم الأدمن -->
+<section id="admin_panel" class="screen">
+  <div class="top"><button class="back" onclick="go('home')">←</button><b>لوحة تحكم الأدمن</b><span>👑</span></div>
+  
+  <!-- تغيير كلمة السر -->
+  <div class="box">
+    <h4>🔑 تغيير كلمة مرور الأدمن</h4>
+    <input id="new_pass" type="password" placeholder="كلمة المرور الجديدة">
+    <button class="act green" onclick="changeAdminPass()">حفظ كلمة المرور الجديدة</button>
+  </div>
+
+  <!-- التحكم بالشبكة والغرفة -->
+  <div class="box">
+    <h4>📢 إرسال تنبيه عام لجميع الأجهزة</h4>
+    <input id="admin_alert_txt" placeholder="اكتب التنبيه هنا...">
+    <button class="act" onclick="sendAdminAlert()">إرسال التنبيه فوراً</button>
+  </div>
+
+  <div class="box">
+    <h4>🎬 سينما إجبارية (تشغيل فيديو عند الجميع)</h4>
+    <input id="admin_cinema_url" placeholder="رابط فيديو MP4 أو يوتيوب">
+    <button class="act green" onclick="forceCinemaAll()">تشغيل عند الجميع</button>
+  </div>
+
+  <div class="box">
+    <h4>🗑️ إجراءات سريعة</h4>
+    <button class="act red" onclick="forceClearChat()">مسح المحادثات عند الجميع</button>
+  </div>
+</section>
+
+<!-- محادثات -->
 <section id="chat" class="screen">
   <div class="top"><button class="back" onclick="go('home')">←</button><b>محادثات فورية</b><span class="status" id="st2"></span></div>
   <div id="msgs"></div>
   <div class="row"><input id="txt" placeholder="اكتب رسالة..." style="margin:0"><button class="act" style="width:110px;margin:0" onclick="sendChat()">إرسال</button></div>
-</section>
+</</section>
+
+<!-- لاسلكي -->
 <section id="walkie" class="screen">
   <div class="top"><button class="back" onclick="go('home')">←</button><b>تخاطب لاسلكي</b><span></span></div>
   <p class="desc">اضغط مع الاستمرار للتحدث، وأفلت للإرسال</p>
   <button class="ptt" id="ptt">اضغط<br>وتحدث</button>
 </section>
+
+<!-- بث -->
 <section id="live" class="screen">
   <div class="top"><button class="back" onclick="stopLive();go('home')">←</button><b>بث مباشر</b><span></span></div>
   <button class="act red" id="liveBtn" onclick="toggleLive()">بدء البث بالكاميرا</button>
@@ -79,6 +138,8 @@ video{width:100%;max-width:430px;border-radius:16px;background:#000;margin-top:1
   </div>
   <video id="remVid" autoplay playsinline style="display:none"></video>
 </section>
+
+<!-- سينما -->
 <section id="cinema" class="screen">
   <div class="top"><button class="back" onclick="go('home')">←</button><b>سينما وتلفاز</b><span></span></div>
   <div class="box">
@@ -87,14 +148,45 @@ video{width:100%;max-width:430px;border-radius:16px;background:#000;margin-top:1
   </div>
   <div id="cinemaBox" style="width:100%;max-width:430px;margin-top:10px"></div>
 </section>
+
 <div id="toast"></div>
+
 <script>
+// إعدادات الأدمن والكلمة الافتراضية
+if(!localStorage.getItem('admin_pwd')){
+  localStorage.setItem('admin_pwd', '1234'); // الباسورد الافتراضي
+}
+
 let peer=null, conns=new Map(), myName='', room='', isHost=false;
 let liveStream=null, liveFrom=null, rec=null, chunks=[], hostId='';
 const $=s=>document.querySelector(s);
 const go=id=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));$('#'+id).classList.add('active');};
-const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2500);};
+const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',3500);};
 const setStatus=m=>{$('#st').textContent=m;$('#st2').textContent=m;};
+
+// فحص كلمة مرور الأدمن
+function checkAdminPass() {
+  const entered = $('#admin_pass_input').value;
+  const saved = localStorage.getItem('admin_pwd');
+  if(entered === saved) {
+    $('#admin_pass_input').value = '';
+    go('admin_panel');
+    toast('مرحباً بك أيها الأدمن 👑');
+  } else {
+    toast('❌ كلمة المرور خاطئة!');
+  }
+}
+
+// تغيير كلمة المرور
+function changeAdminPass() {
+  const newPass = $('#new_pass').value.trim();
+  if(!newPass) { toast('الرجاء كتابة كلمة مرور صالحة!'); return; }
+  localStorage.setItem('admin_pwd', newPass);
+  $('#new_pass').value = '';
+  toast('✅ تم تحديث كلمة مرور الأدمن بنجاح!');
+}
+
+// اتصال الأجهزة
 function join(){
   myName=$('#name').value.trim()||('مستخدم'+Math.floor(Math.random()*99));
   room=($('#room').value.trim()||'100');
@@ -116,6 +208,7 @@ function join(){
     } else toast('خطأ: '+e.type);
   });
 }
+
 function wire(){
   peer.on('connection',c=>c.on('open',()=>{
     addConn(c);
@@ -126,6 +219,7 @@ function wire(){
     call.on('stream',s=>{$('#remVid').srcObject=s;$('#remVid').style.display='block';});
   });
 }
+
 function ready(){setStatus('متصل • '+room+' ('+(conns.size+1)+')');toast('تم الاتصال بالغرفة '+room);}
 function addConn(c){
   conns.set(c.peer,{c,name:c.metadata?.name||'?'});
@@ -135,6 +229,8 @@ function addConn(c){
 }
 function connectTo(id){if(id!==peer.id&&!conns.has(id)){const c=peer.connect(id,{metadata:{name:myName}});c.on('open',()=>addConn(c));}}
 function broadcast(o){conns.forEach(({c})=>{if(c.open)c.send(o);});}
+
+// معالجة البيانات والتحكم بالأدمن للأجهزة المتصلة
 function handle(d,from){
   if(d.type==='join') connectTo(d.id);
   if(d.type==='chat') addMsg(d.name,d.text,false);
@@ -147,7 +243,48 @@ function handle(d,from){
     else{liveFrom=null;$('#watchBox').style.display='none';$('#remVid').style.display='none';}
   }
   if(d.type==='cinema') renderCinema(d.url);
+  
+  // أوامر الأدمن المستلمة
+  if(d.type==='admin_alert'){
+    alert("📢 تنبيه من الأدمن:\n\n" + d.text);
+  }
+  if(d.type==='admin_clear_chat'){
+    $('#msgs').innerHTML = '';
+    toast('🧹 قام الأدمن بمسح المحادثات للجميع');
+  }
+  if(d.type==='admin_force_cinema'){
+    go('cinema');
+    renderCinema(d.url);
+    toast('🎬 قام الأدمن بفرض تشغيل عرض الآن');
+  }
 }
+
+/* ===== أفعال لوحة الأدمن (البث للجميع) ===== */
+function sendAdminAlert() {
+  const text = $('#admin_alert_txt').value.trim();
+  if(!text) return;
+  broadcast({type: 'admin_alert', text: text});
+  toast('✅ تم إرسال التنبيه لجميع المتصلين');
+  $('#admin_alert_txt').value = '';
+}
+
+function forceClearChat() {
+  broadcast({type: 'admin_clear_chat'});
+  $('#msgs').innerHTML = '';
+  toast('✅ تم مسح الشات في كافة الأجهزة');
+}
+
+function forceCinemaAll() {
+  const url = $('#admin_cinema_url').value.trim();
+  if(!url) return;
+  broadcast({type: 'admin_force_cinema', url: url});
+  go('cinema');
+  renderCinema(url);
+  toast('✅ تم فرض تشغيل الفيديو عند الجميع');
+  $('#admin_cinema_url').value = '';
+}
+
+/* ===== محادثات ===== */
 function sendChat(){
   const t=$('#txt').value.trim(); if(!t)return;
   broadcast({type:'chat',name:myName,text:t});
@@ -159,6 +296,8 @@ function addMsg(n,t,me){
   div.innerHTML='<small>'+n+'</small>'+t.replace(/</g,'&lt;');
   $('#msgs').appendChild(div); $('#msgs').scrollTop=1e9;
 }
+
+/* ===== لاسلكي ===== */
 const ptt=$('#ptt');
 ptt.onpointerdown=async()=>{
   try{
@@ -177,6 +316,8 @@ ptt.onpointerdown=async()=>{
 };
 const stopPtt=()=>{if(rec&&rec.state!=='inactive'){rec.stop();ptt.classList.remove('on');ptt.innerHTML='اضغط<br>وتحدث';}};
 ptt.onpointerup=stopPtt; ptt.onpointerleave=stopPtt;
+
+/* ===== بث مباشر ===== */
 async function toggleLive(){
   if(liveStream){stopLive();return;}
   try{
@@ -194,6 +335,8 @@ function stopLive(){
 }
 function watchLive(){if(liveFrom){const c=peer.call(liveFrom,new MediaStream(),{metadata:{kind:'live'}});
   c.on('stream',s=>{$('#remVid').srcObject=s;$('#remVid').style.display='block';});}}
+
+/* ===== سينما ===== */
 function playCinema(share){
   const url=$('#vidUrl').value.trim(); if(!url)return;
   renderCinema(url);
