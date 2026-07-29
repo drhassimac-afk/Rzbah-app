@@ -3,172 +3,114 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RabahDj - Ultimate</title>
+    <title>RabahDj Pro</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <link rel="manifest" href="manifest.json">
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <style>
-        :root { --bg: #0b1220; --glass: rgba(255, 255, 255, 0.08); }
-        body { background: var(--bg); color: #fff; font-family: 'Segoe UI', sans-serif; margin: 0; padding-bottom: 90px; }
-        .screen { display: none; }
-        .active { display: block; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
-        .card { background: var(--glass); backdrop-filter: blur(15px); padding: 20px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: 0.3s; }
-        .card:active { transform: scale(0.95); }
-        .container { padding: 20px; text-align: center; }
-        
-        /* Video UI */
-        video { width: 100%; height: 250px; border-radius: 15px; background: #000; margin-bottom: 10px; }
-        
-        /* Chat UI */
-        #messages { height: 250px; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 20px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .msg-bubble { padding: 10px 15px; border-radius: 15px; max-width: 80%; font-size: 0.9rem; }
-        .my-msg { background: #3b82f6; align-self: flex-end; color: white; border-bottom-right-radius: 2px; }
-        .other-msg { background: #1e293b; align-self: flex-start; color: #e2e8f0; border-bottom-left-radius: 2px; }
-        .time-label { font-size: 0.6rem; opacity: 0.7; margin-top: 5px; text-align: left; }
-        
-        .nav-bar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 15px 0; background: rgba(11, 18, 32, 0.95); backdrop-filter: blur(10px); border-top: 1px solid #1e293b; }
-        .nav-btn { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 1.2rem; }
+        :root { --bg: #0b1220; --accent: #3b82f6; }
+        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+        .screen { display: none; } .active { display: block; }
+        .container { padding: 20px; }
+        .nav-bar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 15px 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); border-top: 1px solid #334155; }
+        .msg { padding: 8px 12px; border-radius: 12px; margin: 5px; max-width: 80%; }
+        .my { background: var(--accent); align-self: flex-end; }
+        .other { background: #334155; align-self: flex-start; }
     </style>
 </head>
 <body>
 
-    <!-- Home Screen -->
+    <!-- الشاشات -->
     <div id="home" class="screen active">
-        <header style="text-align: center; padding: 30px 20px;"><h1>RabahDj</h1></header>
-        <div class="grid">
-            <div class="card" onclick="go('chat-screen')"><i class="fa-solid fa-comments" style="color: #3b82f6;"></i><br>محادثات</div>
-            <div class="card" onclick="go('video-screen')"><i class="fa-solid fa-video" style="color: #ef4444;"></i><br>فيديو</div>
-            <!-- زر التخاطب (اضغط للتحدث) -->
-            <div class="card" onmousedown="startRecording()" onmouseup="stopRecording()" style="border: 2px solid #22c55e;">
-                <i class="fa-solid fa-microphone" style="color: #22c55e;"></i><br>تخاطب (اضغط)
-            </div>
-            <div class="card" onclick="go('cinema-screen')"><i class="fa-solid fa-film" style="color: #f59e0b;"></i><br>سينما</div>
+        <h2 style="text-align:center; padding:20px;">RabahDj Dashboard</h2>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; padding:10px;">
+            <button onclick="go('chat-screen')">💬 محادثة</button>
+            <button onclick="go('video-screen')">🎥 فيديو</button>
+            <button onmousedown="startRecording()" onmouseup="stopRecording()" style="background:#22c55e;">🎙️ اضغط للتكلم</button>
+            <button onclick="document.getElementById('fileIn').click()">📁 ملفات</button>
         </div>
+        <input type="file" id="fileIn" style="display:none" onchange="sendFile(this)">
     </div>
 
-    <!-- Chat Screen -->
-    <div id="chat-screen" class="screen">
-        <div class="container">
-            <h3>المحادثة</h3>
-            <div id="messages"></div>
-            <input type="text" id="msgInput" placeholder="رسالة..." style="width: 70%; padding: 10px;">
-            <button onclick="sendMessage()">إرسال</button>
-            <button onclick="go('home')">رجوع</button>
-        </div>
+    <div id="chat-screen" class="screen container">
+        <div id="messages" style="height:300px; overflow-y:auto; display:flex; flex-direction:column;"></div>
+        <input type="text" id="msgInput" style="width:60%">
+        <button onclick="sendMessage()">إرسال</button>
+        <button onclick="sendLike()">❤️</button>
+        <button onclick="go('home')">خروج</button>
     </div>
 
-    <!-- Video Screen -->
-    <div id="video-screen" class="screen">
-        <div class="container">
-            <h3>بث فيديو</h3>
-            <video id="remoteVideo" autoplay playsinline></video>
-            <video id="localVideo" autoplay muted playsinline></video>
-            <button onclick="startVideoCall()">بدء الاتصال</button>
-            <button onclick="go('home')">رجوع</button>
-        </div>
+    <div id="video-screen" class="screen container">
+        <video id="remoteVideo" autoplay playsinline style="width:100%"></video>
+        <button onclick="startVideoCall()">اتصال فيديو</button>
+        <button onclick="go('home')">خروج</button>
     </div>
 
-    <!-- Navigation -->
     <div class="nav-bar">
-        <button class="nav-btn" onclick="go('home')"><i class="fa-solid fa-house"></i></button>
-        <button class="nav-btn" onclick="adminLogin()"><i class="fa-solid fa-gear"></i></button>
+        <button onclick="go('home')">🏠</button>
+        <button onclick="adminLogin()">⚙️</button>
     </div>
 
     <script>
-        // 1. التنقل
+        const S = { peer: new Peer(), conn: null, mediaRecorder: null, audioChunks: [] };
+        
         function go(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-        // 2. الاتصال العام (PeerJS)
-        let peer = new Peer();
-        let conn;
-        peer.on('connection', (c) => {
-            conn = c;
-            conn.on('data', (data) => {
-                // استقبال صوت (Blob) أو نص
-                if (data instanceof Blob) {
-                    const audio = new Audio(URL.createObjectURL(data));
-                    audio.play();
-                } else {
-                    displayMsg(data, false);
-                }
+        // --- الاتصال والبيانات ---
+        S.peer.on('connection', (c) => { 
+            S.conn = c; 
+            c.on('data', (d) => {
+                if(d.type === 'like') renderMsg('❤️', false);
+                else if(d.type === 'audio') new Audio(URL.createObjectURL(d.blob)).play();
+                else renderMsg(d, false);
             });
         });
 
-        // 3. الشات النصي
-        function sendMessage() {
-            const input = document.getElementById('msgInput');
-            if(conn && input.value) {
-                conn.send(input.value);
-                displayMsg(input.value, true);
-                input.value = '';
-            }
+        function sendMessage() { 
+            const val = document.getElementById('msgInput').value;
+            if(S.conn && val) { S.conn.send(val); renderMsg(val, true); }
         }
 
-        function displayMsg(msg, isMine) {
-            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const div = document.createElement('div');
-            div.className = `msg-bubble ${isMine ? 'my-msg' : 'other-msg'}`;
-            div.innerHTML = `<div>${msg}</div><div class="time-label">${time}</div>`;
-            document.getElementById('messages').appendChild(div);
-            document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+        function sendLike() { if(S.conn) { S.conn.send({type: 'like'}); renderMsg('❤️', true); } }
+
+        function renderMsg(text, isMine) {
+            const d = document.createElement('div');
+            d.className = `msg ${isMine ? 'my' : 'other'}`;
+            d.textContent = text;
+            document.getElementById('messages').appendChild(d);
         }
 
-        // 4. التخاطب الصوتي (Walkie-Talkie)
-        let mediaRecorder;
-        let audioChunks = [];
-
+        // --- الصوت والملفات ---
         async function startRecording() {
-            if (!conn) { alert("يجب الاتصال بصديق أولاً"); return; }
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = (event) => {
-                audioChunks.push(event.data);
+            S.mediaRecorder = new MediaRecorder(stream);
+            S.audioChunks = [];
+            S.mediaRecorder.ondataavailable = e => S.audioChunks.push(e.data);
+            S.mediaRecorder.start();
+        }
+        function stopRecording() {
+            S.mediaRecorder.stop();
+            S.mediaRecorder.onstop = () => {
+                const blob = new Blob(S.audioChunks, {type: 'audio/webm'});
+                if(S.conn) S.conn.send({type: 'audio', blob});
             };
-            mediaRecorder.start();
+        }
+        function sendFile(input) {
+            if(S.conn && input.files[0]) S.conn.send(input.files[0]);
         }
 
-        function stopRecording() {
-            if (mediaRecorder && mediaRecorder.state === "recording") {
-                mediaRecorder.stop();
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    // إرسال الصوت كبيانات ثنائية
-                    conn.send(audioBlob);
-                    displayMsg("<em>[رسالة صوتية مرسلة]</em>", true);
-                };
+        // --- الفيديو والأدمن ---
+        async function startVideoCall() {
+            const id = prompt("ID الصديق:");
+            const stream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+            const call = S.peer.call(id, stream);
+            call.on('stream', rs => document.getElementById('remoteVideo').srcObject = rs);
+        }
+
+        function adminLogin() {
+            if(prompt("كلمة المرور:") === (localStorage.getItem('adminPass') || '1234')) {
+                if(confirm("مسح السجل؟")) document.getElementById('messages').innerHTML = '';
             }
         }
-
-        // 5. الفيديو
-        async function startVideoCall() {
-            const peerId = prompt("أدخل معرف الصديق:");
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('localVideo').srcObject = stream;
-            const call = peer.call(peerId, stream);
-            call.on('stream', (remoteStream) => {
-                document.getElementById('remoteVideo').srcObject = remoteStream;
-            });
-        }
-
-        peer.on('call', async (call) => {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            document.getElementById('localVideo').srcObject = stream;
-            call.answer(stream);
-            call.on('stream', (remoteStream) => {
-                document.getElementById('remoteVideo').srcObject = remoteStream;
-            });
-            go('video-screen');
-        });
-
-        // 6. الأدمن
-        function adminLogin() {
-            if (prompt("كلمة مرور الأدمن:") === '1234') alert("تم الدخول");
-        }
-        
-        // تسجيل الـ Service Worker
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
     </script>
 </body>
 </html>
