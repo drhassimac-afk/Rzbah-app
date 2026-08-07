@@ -1,116 +1,102 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RabahDj Pro</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-    <style>
-        :root { --bg: #0b1220; --accent: #3b82f6; }
-        body { background: var(--bg); color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
-        .screen { display: none; } .active { display: block; }
-        .container { padding: 20px; }
-        .nav-bar { position: fixed; bottom: 0; width: 100%; display: flex; justify-content: space-around; padding: 15px 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); border-top: 1px solid #334155; }
-        .msg { padding: 8px 12px; border-radius: 12px; margin: 5px; max-width: 80%; }
-        .my { background: var(--accent); align-self: flex-end; }
-        .other { background: #334155; align-self: flex-start; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RabahDj</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 <body>
 
-    <!-- الشاشات -->
-    <div id="home" class="screen active">
-        <h2 style="text-align:center; padding:20px;">RabahDj Dashboard</h2>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; padding:10px;">
-            <button onclick="go('chat-screen')">💬 محادثة</button>
-            <button onclick="go('video-screen')">🎥 فيديو</button>
-            <button onmousedown="startRecording()" onmouseup="stopRecording()" style="background:#22c55e;">🎙️ اضغط للتكلم</button>
-            <button onclick="document.getElementById('fileIn').click()">📁 ملفات</button>
-        </div>
-        <input type="file" id="fileIn" style="display:none" onchange="sendFile(this)">
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="logo">
+      <h1>Rabah<span>Dj</span></h1>
+      <div class="underline-logo"></div>
+      <p class="slogan">شبكتك الاجتماعية المحلية</p>
     </div>
+  </header>
 
-    <div id="chat-screen" class="screen container">
-        <div id="messages" style="height:300px; overflow-y:auto; display:flex; flex-direction:column;"></div>
-        <input type="text" id="msgInput" style="width:60%">
-        <button onclick="sendMessage()">إرسال</button>
-        <button onclick="sendLike()">❤️</button>
-        <button onclick="go('home')">خروج</button>
-    </div>
+  <!-- ===== INFO BAR ===== -->
+  <div class="info-bar">
+    <i class="fa fa-wifi-slash" style="color:#aaa"></i>
+    <p>اتصل، شارك، وابث صوتاً وفيديو مع أصدقاء</p>
+  </div>
+  <div class="info-bar sub">
+    <p>عبر شبكتك المحلية بدون إنترنت</p>
+  </div>
 
-    <div id="video-screen" class="screen container">
-        <video id="remoteVideo" autoplay playsinline style="width:100%"></video>
-        <button onclick="startVideoCall()">اتصال فيديو</button>
-        <button onclick="go('home')">خروج</button>
-    </div>
+  <!-- ===== GRID ===== -->
+  <main class="grid">
 
-    <div class="nav-bar">
-        <button onclick="go('home')">🏠</button>
-        <button onclick="adminLogin()">⚙️</button>
-    </div>
+    <a href="pages/live.html" class="card purple">
+      <div class="card-icon">
+        <i class="fa fa-podcast"></i>
+      </div>
+      <span>بث مباشر</span>
+    </a>
 
-    <script>
-        const S = { peer: new Peer(), conn: null, mediaRecorder: null, audioChunks: [] };
-        
-        function go(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+    <a href="pages/cinema.html" class="card darkred">
+      <div class="card-icon">
+        <i class="fa fa-film"></i>
+      </div>
+      <span>سينما وتلفاز</span>
+    </a>
 
-        // --- الاتصال والبيانات ---
-        S.peer.on('connection', (c) => { 
-            S.conn = c; 
-            c.on('data', (d) => {
-                if(d.type === 'like') renderMsg('❤️', false);
-                else if(d.type === 'audio') new Audio(URL.createObjectURL(d.blob)).play();
-                else renderMsg(d, false);
-            });
-        });
+    <a href="pages/walkie.html" class="card green">
+      <div class="card-icon">
+        <i class="fa fa-microphone"></i>
+      </div>
+      <span>تخاطب لاسلكي</span>
+    </a>
 
-        function sendMessage() { 
-            const val = document.getElementById('msgInput').value;
-            if(S.conn && val) { S.conn.send(val); renderMsg(val, true); }
-        }
+    <a href="pages/chat.html" class="card blue">
+      <div class="card-icon">
+        <i class="fa fa-comment-dots"></i>
+      </div>
+      <span>محادثات فورية</span>
+    </a>
 
-        function sendLike() { if(S.conn) { S.conn.send({type: 'like'}); renderMsg('❤️', true); } }
+    <a href="pages/files.html" class="card orange">
+      <div class="card-icon">
+        <i class="fa fa-folder-open"></i>
+      </div>
+      <span>مشاركة ملفات</span>
+    </a>
 
-        function renderMsg(text, isMine) {
-            const d = document.createElement('div');
-            d.className = `msg ${isMine ? 'my' : 'other'}`;
-            d.textContent = text;
-            document.getElementById('messages').appendChild(d);
-        }
+    <a href="pages/games.html" class="card teal">
+      <div class="card-icon">
+        <i class="fa fa-gamepad"></i>
+      </div>
+      <span>ألعاب جماعية</span>
+    </a>
 
-        // --- الصوت والملفات ---
-        async function startRecording() {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            S.mediaRecorder = new MediaRecorder(stream);
-            S.audioChunks = [];
-            S.mediaRecorder.ondataavailable = e => S.audioChunks.push(e.data);
-            S.mediaRecorder.start();
-        }
-        function stopRecording() {
-            S.mediaRecorder.stop();
-            S.mediaRecorder.onstop = () => {
-                const blob = new Blob(S.audioChunks, {type: 'audio/webm'});
-                if(S.conn) S.conn.send({type: 'audio', blob});
-            };
-        }
-        function sendFile(input) {
-            if(S.conn && input.files[0]) S.conn.send(input.files[0]);
-        }
+  </main>
 
-        // --- الفيديو والأدمن ---
-        async function startVideoCall() {
-            const id = prompt("ID الصديق:");
-            const stream = await navigator.mediaDevices.getUserMedia({video:true, audio:true});
-            const call = S.peer.call(id, stream);
-            call.on('stream', rs => document.getElementById('remoteVideo').srcObject = rs);
-        }
+  <!-- ===== BOTTOM NAV ===== -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="nav-item active">
+      <i class="fa fa-home"></i>
+      <span>الرئيسية</span>
+    </a>
+    <a href="pages/profile.html" class="nav-item">
+      <i class="fa fa-user"></i>
+      <span>ملفي</span>
+    </a>
+    <a href="pages/nearby.html" class="nav-item center-btn">
+      <i class="fa fa-wifi"></i>
+    </a>
+    <a href="pages/notifications.html" class="nav-item">
+      <i class="fa fa-bell"></i>
+      <span>إشعارات</span>
+    </a>
+    <a href="pages/settings.html" class="nav-item">
+      <i class="fa fa-cog"></i>
+      <span>الإعدادات</span>
+    </a>
+  </nav>
 
-        function adminLogin() {
-            if(prompt("كلمة المرور:") === (localStorage.getItem('adminPass') || '1234')) {
-                if(confirm("مسح السجل؟")) document.getElementById('messages').innerHTML = '';
-            }
-        }
-    </script>
+  <script src="js/app.js"></script>
 </body>
 </html>
